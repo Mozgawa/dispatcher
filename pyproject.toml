@@ -25,7 +25,44 @@ radon = "^5.1.0"
 pre-commit = "^2.20.0"
 coverage = "^6.5.0"
 tox = "^3.27.0"
+types-pymysql = "^1.0.19.1"
+requests = "^2.28.1"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.mypy]
+files = "dispatcher"
+ignore_missing_imports = true
+
+[tool.black]
+line-length = 100
+target-version = ["py310"]
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+py_version = 310
+line_length = 100
+
+[tool.pylint.messages_control]
+max-line-length = 100
+
+disable = ["no-name-in-module", "too-few-public-methods", "subprocess-run-check"]
+
+[tool.pylint.FORMAT]
+max-module-lines = 100
+good-names=["i", "f"]
+max-line-length=100
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+envlist = py310
+isolated_build = True
+[testenv]
+deps = pytest >= 5.2
+commands = pytest
+"""

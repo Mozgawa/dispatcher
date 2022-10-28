@@ -1,25 +1,28 @@
 version: "3.8"
 services:
   web:
-    build: ./dispatcher
+    build:
+      context: ./
+      dockerfile: ./dispatcher/Dockerfile
     ports:
       - 8004:8000
-    command: uvicorn main:app --host 0.0.0.0
-    volumes:
-      - ./dispatcher:/app
+    command: poetry run uvicorn dispatcher.server:app --host 0.0.0.0
+    environment:
+      - CELERY_BROKER_URL=amqp://rabbitmq
+      - CELERY_RESULT_BACKEND=db+mysql://root:mysql@mysql:5433/dispatcher
     depends_on:
       mysql:
         condition: service_healthy
       rabbitmq:
         condition: service_started
   worker:
-    build: ./dispatcher
-    command: celery -A worker worker
-    volumes:
-      - ./dispatcher:/app
+    build:
+      context: ./
+      dockerfile: ./dispatcher/Dockerfile
+    command: poetry run celery -A dispatcher.worker worker
     environment:
       - CELERY_BROKER_URL=amqp://rabbitmq
-      - CELERY_RESULT_BACKEND=db+mysql://root:mysql@mysql:5433/rcs
+      - CELERY_RESULT_BACKEND=db+mysql://root:mysql@mysql:5433/dispatcher
     depends_on:
       mysql:
         condition: service_healthy
@@ -50,10 +53,15 @@ services:
       timeout: 10s
       retries: 10
   flower:
-    build: ./dispatcher
-    command: celery -A worker flower --port=5555 --broker=amqp://rabbitmq --result-backend=db+mysql://root:mysql@mysql:5433/rcs
+    build:
+      context: ./
+      dockerfile: ./dispatcher/Dockerfile
+    command: poetry run celery -A dispatcher.worker flower --port=5555 --broker=amqp://rabbitmq --result-backend=db+mysql://root:mysql@mysql:5433/dispatcher
     ports:
       - 5556:5555
+    environment:
+      - CELERY_BROKER_URL=amqp://rabbitmq
+      - CELERY_RESULT_BACKEND=db+mysql://root:mysql@mysql:5433/dispatcher
     depends_on:
       mysql:
         condition: service_healthy
@@ -67,18 +75,18 @@ services:
     image: prom/prometheus:latest
     restart: unless-stopped
     volumes:
-      - ./dispatcher:/app
+      - ./data/prometheus:/prometheus
     command:
-      - '--config.file=/app/prometheus.yml'
-      - '--storage.tsdb.path=/app'
-      - '--web.console.libraries=/app/console_libraries'
-      - '--web.console.templates=/app/consoles'
+      - '--config.file=/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/prometheus/console_libraries'
+      - '--web.console.templates=/prometheus/consoles'
       - '--web.enable-lifecycle'
     ports:
       - 9090:9090
   grafana:
     image: grafana/grafana:latest
     volumes:
-      - ./dispatcher:/app
+      - ./data/grafana:/grafana
     ports:
       - 3000:3000

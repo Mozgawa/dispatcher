@@ -1,9 +1,11 @@
 """Worker."""
 
-from celery import Celery
 import os
 import subprocess
+from typing import Dict
+
 import pymysql
+from celery import Celery
 
 pymysql.install_as_MySQLdb()
 
@@ -13,8 +15,9 @@ celery.conf.result_backend = os.environ.get("CELERY_RESULT_BACKEND")
 celery.conf.task_track_started = True
 
 
-@celery.task
-def execute(command_line: str):
+@celery.task  # type: ignore
+def execute(command_line: str) -> Dict[str, str | int]:
+    """Execute command task."""
     result = subprocess.run(
         args=command_line,
         shell=True,
