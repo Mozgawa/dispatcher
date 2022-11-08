@@ -7,10 +7,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-sqlalchemy = "^1.4.42"
 celery = "^5.2.7"
-cx-Oracle = "^8.3.0"
-fastapi = {extras = ["all"], version = "^0.85.1"}
 
 [tool.poetry.group.celery.dependencies]
 sqlalchemy = "^1.4.42"

@@ -3,7 +3,7 @@ services:
   web:
     build:
       context: ./
-      dockerfile: ./dispatcher/Dockerfile
+      dockerfile: ./dispatcher/Dockerfile.fastapi
     ports:
       - 8004:8000
     command: poetry run uvicorn dispatcher.server:app --host 0.0.0.0
@@ -16,7 +16,7 @@ services:
   worker:
     build:
       context: ./
-      dockerfile: ./dispatcher/Dockerfile
+      dockerfile: ./dispatcher/Dockerfile.celery
     command: poetry run celery -A dispatcher.worker worker
     environment:
       - CELERY_BROKER_URL=amqp://rabbitmq
