@@ -9,10 +9,8 @@ services:
     command: poetry run uvicorn dispatcher.server:app --host 0.0.0.0
     environment:
       - CELERY_BROKER_URL=amqp://rabbitmq
-      - CELERY_RESULT_BACKEND=db+mysql://root:mysql@mysql:5433/dispatcher
+      - CELERY_RESULT_BACKEND=db+oracle://ADWGU_AXN:j3ezKQe_2021@azl-axnorcle01d.cloud-pg.com:1521/?service_name=axondev_pdb
     depends_on:
-      mysql:
-        condition: service_healthy
       rabbitmq:
         condition: service_started
   worker:
@@ -22,10 +20,8 @@ services:
     command: poetry run celery -A dispatcher.worker worker
     environment:
       - CELERY_BROKER_URL=amqp://rabbitmq
-      - CELERY_RESULT_BACKEND=db+mysql://root:mysql@mysql:5433/dispatcher
+      - CELERY_RESULT_BACKEND=db+oracle://ADWGU_AXN:j3ezKQe_2021@azl-axnorcle01d.cloud-pg.com:1521/?service_name=axondev_pdb
     depends_on:
-      mysql:
-        condition: service_healthy
       web:
         condition: service_started
       rabbitmq:
@@ -37,56 +33,3 @@ services:
       - RABBITMQ_DEFAULT_PASS=guest
     ports:
       - "5672:5672"
-  mysql:
-    build:
-      context: mysql
-      dockerfile: Dockerfile
-    image: mysql:latest
-    environment:
-      - MYSQL_HOST=mysql
-      - MYSQL_TCP_PORT=5433
-      - MYSQL_ROOT_PASSWORD=mysql
-    ports:
-      - "5433:5433"
-    healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
-      timeout: 10s
-      retries: 10
-  flower:
-    build:
-      context: ./
-      dockerfile: ./dispatcher/Dockerfile
-    command: poetry run celery -A dispatcher.worker flower --port=5555 --broker=amqp://rabbitmq --result-backend=db+mysql://root:mysql@mysql:5433/dispatcher
-    ports:
-      - 5556:5555
-    environment:
-      - CELERY_BROKER_URL=amqp://rabbitmq
-      - CELERY_RESULT_BACKEND=db+mysql://root:mysql@mysql:5433/dispatcher
-    depends_on:
-      mysql:
-        condition: service_healthy
-      web:
-        condition: service_started
-      worker:
-        condition: service_started
-      rabbitmq:
-        condition: service_started
-  prometheus:
-    image: prom/prometheus:latest
-    restart: unless-stopped
-    volumes:
-      - ./data/prometheus:/prometheus
-    command:
-      - '--config.file=/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/prometheus/console_libraries'
-      - '--web.console.templates=/prometheus/consoles'
-      - '--web.enable-lifecycle'
-    ports:
-      - 9090:9090
-  grafana:
-    image: grafana/grafana:latest
-    volumes:
-      - ./data/grafana:/grafana
-    ports:
-      - 3000:3000
