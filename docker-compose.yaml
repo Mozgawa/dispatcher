@@ -9,7 +9,7 @@ services:
     command: poetry run uvicorn dispatcher.server:app --host 0.0.0.0
     environment:
       - CELERY_BROKER_URL=amqp://rabbitmq
-      - CELERY_RESULT_BACKEND=db+oracle://ADWGU_AXN:j3ezKQe_2021@azl-axnorcle01d.cloud-pg.com:1521/?service_name=axondev_pdb
+      - CELERY_RESULT_BACKEND=dispatcher.backend:RCSDatabaseBackend+oracle://ADWGU_AXN:j3ezKQe_2021@azl-axnorcle01d.cloud-pg.com:1521/?service_name=axondev_pdb
     depends_on:
       rabbitmq:
         condition: service_started
@@ -20,7 +20,7 @@ services:
     command: poetry run celery -A dispatcher.worker worker
     environment:
       - CELERY_BROKER_URL=amqp://rabbitmq
-      - CELERY_RESULT_BACKEND=db+oracle://ADWGU_AXN:j3ezKQe_2021@azl-axnorcle01d.cloud-pg.com:1521/?service_name=axondev_pdb
+      - CELERY_RESULT_BACKEND=dispatcher.backend:RCSDatabaseBackend+oracle://ADWGU_AXN:j3ezKQe_2021@azl-axnorcle01d.cloud-pg.com:1521/?service_name=axondev_pdb
     depends_on:
       web:
         condition: service_started

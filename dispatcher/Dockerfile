@@ -14,7 +14,6 @@ RUN apt-get update \
 WORKDIR /opt/oracle
 RUN wget https://download.oracle.com/otn_software/linux/instantclient/218000/instantclient-basiclite-linux.x64-21.8.0.0.0dbru.zip
 RUN unzip instantclient-basiclite-linux.x64-21.8.0.0.0dbru.zip
-RUN pip install --no-cache-dir git+https://github.com/Mozgawa/celery.git
 ENV LD_LIBRARY_PATH=/opt/oracle/instantclient_21_8:$LD_LIBRARY_PATH
 
 WORKDIR /app
